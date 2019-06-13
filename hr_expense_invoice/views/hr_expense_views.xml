@@ -38,4 +38,23 @@
         </field>
     </record>
 
+    <record id="hr_expense_sheet_form_view_inherit_sale_expense" model="ir.ui.view">
+        <field name="name">hr.expense.sheet.form.inherit.sale.expense</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='expense_line_ids']/tree/field[@name='name']" position="after">
+                <field name="invoice_id"/>
+            </xpath>
+            <div class="oe_button_box" position="inside">
+                <button class="oe_stat_button" icon="fa-book"
+                        name="action_view_invoices" type="object"
+                        attrs="{'invisible': [('invoice_count', '=', 0)]}"
+                        groups="account.group_account_invoice">
+                    <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                </button>
+            </div>
+        </field>
+    </record>
+
 </odoo>

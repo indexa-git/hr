@@ -2,13 +2,17 @@
 # Copyright 2017 Vicent Cubells <vicent.cubells@tecnativa.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import _, api, models
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from odoo.tools import float_compare
 
 
 class HrExpenseSheet(models.Model):
     _inherit = "hr.expense.sheet"
+
+    invoice_count = fields.Integer(
+        compute='_compute_invoice_count',
+    )
 
     @api.multi
     def action_sheet_move_create(self):
@@ -43,3 +47,32 @@ class HrExpenseSheet(models.Model):
                       'Invoice: %s') % line.invoice_id.number)
             c_move_lines.reconcile()
         return res
+
+    @api.multi
+    def _compute_invoice_count(self):
+        Invoice = self.env['account.invoice']
+        can_read = Invoice.check_access_rights('read', raise_exception=False)
+        for sheet in self:
+            sheet.invoice_count = can_read and \
+                len(sheet.expense_line_ids.mapped('invoice_id')) or 0
+
+    @api.multi
+    def action_view_invoices(self):
+        self.ensure_one()
+        action = {
+            'name': _('Invoices'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.invoice',
+            'target': 'current',
+        }
+        invoice_ids = self.expense_line_ids.mapped('invoice_id').ids
+        view = self.env.ref('account.invoice_supplier_form')
+        if len(invoice_ids) == 1:
+            invoice = invoice_ids[0]
+            action['res_id'] = invoice
+            action['view_mode'] = 'form'
+            action['views'] = [(view.id, 'form')]
+        else:
+            action['view_mode'] = 'tree,form'
+            action['domain'] = [('id', 'in', invoice_ids)]
+        return action

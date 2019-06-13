@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo.tests import common
+from odoo.exceptions import UserError
 
 
 class TestHrExpenseInvoice(common.SavepointCase):
@@ -80,7 +81,7 @@ class TestHrExpenseInvoice(common.SavepointCase):
         self.assertTrue(self.sheet.account_move_id)
 
     def test_1_hr_test_invoice(self):
-        # There is not expense lines in sheet
+        # There is no expense lines in sheet
         self.assertEqual(len(self.sheet.expense_line_ids), 0)
         # We add an expense
         self.sheet.expense_line_ids = [(6, 0, [self.expense.id])]
@@ -103,7 +104,7 @@ class TestHrExpenseInvoice(common.SavepointCase):
         self.assertEqual(self.invoice.state, 'paid')
 
     def test_2_hr_test_multi_invoices(self):
-        # There is not expense lines in sheet
+        # There is no expense lines in sheet
         self.assertEqual(len(self.sheet.expense_line_ids), 0)
         # We add 2 expenses
         self.sheet.expense_line_ids = [(6, 0, [self.expense.id,
@@ -129,3 +130,29 @@ class TestHrExpenseInvoice(common.SavepointCase):
         self.assertTrue(self.sheet.account_move_id)
         # Invoice is now paid
         self.assertEqual(self.invoice.state, 'paid')
+
+    def test_3_hr_test_expense_create_invoice(self):
+        # There is no expense lines in sheet
+        self.assertEqual(len(self.sheet.expense_line_ids), 0)
+        # We add 2 expenses
+        self.sheet.expense_line_ids = [(6, 0, [self.expense.id,
+                                               self.expense2.id])]
+        self.assertEqual(len(self.sheet.expense_line_ids), 2)
+        # We create invoice from expense
+        ctx = {'active_id': self.sheet.id,
+               'active_ids': [self.sheet.id],
+               'active_model': 'hr.expense.sheet'}
+        vals = {'expense_ids': [(6, 0, [self.expense.id, self.expense2.id])]}
+        Wizard = self.env['hr.expense.create.invoice']
+        with self.assertRaises(UserError):
+            wizard = Wizard.with_context(ctx).create(vals)
+        self.sheet.approve_expense_sheets()
+        wizard = Wizard.with_context(ctx).create(vals)
+        invoice = wizard.create_invoice()
+        # A new invoice is created for all selected expenses
+        self.assertEqual(invoice,
+                         self.sheet.expense_line_ids.mapped('invoice_id'))
+        self.assertEqual(self.sheet.invoice_count, 1)
+        res = self.sheet.action_view_invoices()
+        # Click on View Invoice button link to the correct invoice
+        self.assertEqual(res['res_id'], invoice.id)
