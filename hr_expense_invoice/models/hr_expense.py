@@ -32,8 +32,8 @@ class HrExpense(models.Model):
             invoice = self.env['account.invoice'].browse(vals['invoice_id'])
             vals['date'] = invoice.date_invoice
             vals['analytic_account_id'] = False
-            vals['unit_amount'] = invoice.residual
-            vals['total_amount'] = invoice.residual
+            vals['unit_amount'] = invoice.amount_untaxed
+            vals['total_amount'] = invoice.amount_total_signed
             vals['quantity'] = 1.0
 
     @api.model
