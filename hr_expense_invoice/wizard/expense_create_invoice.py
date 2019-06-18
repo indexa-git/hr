@@ -43,7 +43,7 @@ class HRExpenseCreateInvoice(models.TransientModel):
                                  'quantity': x.quantity,
                                  'date_invoice': x.date,
                                  'account_id': x.account_id.id,
-                                 'invoice_line_tax_ids': x.tax_ids.ids, })
+                                 'invoice_line_tax_ids': [(6, 0, x.tax_ids.ids)]})
                          for x in expenses]
         invoice_vals = {
             'type': 'in_invoice',
