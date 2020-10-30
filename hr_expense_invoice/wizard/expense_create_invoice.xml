@@ -18,12 +18,14 @@
         </field>
     </record>
 
-    <act_window
-        name="Create Invoice"
-        res_model="hr.expense.create.invoice"
-        src_model="hr.expense.sheet"
-        view_mode="form"
-        target="new"
-        id="action_expense_create_invoice" />
+    <record id="action_expense_create_invoice" model="ir.actions.act_window">
+        <field name="name">Create Invoice</field>
+        <field name="res_model">hr.expense.create.invoice</field>
+        <field name="src_model">hr.expense.sheet</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="hr_expense_create_invoice_form"/>
+        <field name="target">new</field>
+    </record>
 
 </odoo>
